@@ -1,0 +1,8 @@
+name: scccpdebris
+main: net.playl.scccpdebris.Main
+version: "1.0.0"
+author: UnknownKE
+api-version: 1.19
+description: fix flawed part of the Minecraft multiplayer protocol
+
+depend: [ProtocolLib]
