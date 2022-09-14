@@ -184,10 +184,12 @@ public class SecurityPacket extends PacketAdapter implements Listener {
             Bukkit.getScheduler().runTaskTimer(plugin, (task) -> {
                 if (!p.isOnline()) {
                     task.cancel();
+                    return;
                 }
                 World w = p.getWorld();
                 if (w.getEnvironment() != Environment.THE_END) {
                     task.cancel();
+                    return;
                 }
                 if (w.getEnderDragonBattle().getEnderDragon() == null) {
                     try {
@@ -197,6 +199,7 @@ public class SecurityPacket extends PacketAdapter implements Listener {
                     }
                     p.setSendViewDistance(w.getSendViewDistance());
                     task.cancel();
+                    return;
                 }
                 if (!w.getEnderDragonBattle().getBossBar().getPlayers().contains(p)) {
                     try {
@@ -205,6 +208,7 @@ public class SecurityPacket extends PacketAdapter implements Listener {
                         return;
                     }
                     task.cancel();
+                    return;
                 }
             }, 5L, 20L);
         });

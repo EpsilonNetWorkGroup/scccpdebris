@@ -35,6 +35,7 @@ public class SecurityStarlight extends BukkitRunnable {
         if (pf.getDuration() <= 30) {
             p.setViewDistance(p.getWorld().getViewDistance());
             p.setSimulationDistance(p.getWorld().getSimulationDistance());
+            cancel();
             return;
         }
 
