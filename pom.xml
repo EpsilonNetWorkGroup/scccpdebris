@@ -48,11 +48,6 @@
     <id>dmulloy2-repo</id>
     <url>https://repo.dmulloy2.net/repository/public/</url>
 </repository>
-<repository>
-    <id>Epsilon NetWork Repo-public</id>
-    <name>Epsilon NetWork Repo</name>
-    <url>https://mvn.playl.net/public</url>
-</repository>
 </repositories>
 
 <dependencies>
@@ -65,7 +60,7 @@
   <dependency>
     <groupId>io.papermc.paper</groupId>
     <artifactId>paper-api</artifactId>
-    <version>1.19.2-R0.1-SNAPSHOT</version>
+    <version>1.19.3-R0.1-SNAPSHOT</version>
     <scope>provided</scope>
   </dependency>
 </dependencies>
