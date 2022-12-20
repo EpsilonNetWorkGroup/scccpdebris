@@ -43,7 +43,7 @@ import com.comphenix.protocol.wrappers.AutoWrapper;
 import com.comphenix.protocol.wrappers.BukkitConverters;
 import com.comphenix.protocol.wrappers.Converters;
 import com.comphenix.protocol.wrappers.MinecraftKey;
-import com.comphenix.protocol.wrappers.WrappedWatchableObject;
+import com.comphenix.protocol.wrappers.WrappedDataValue;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -77,11 +77,11 @@ public class SecurityPacket extends PacketAdapter implements Listener {
         PacketContainer packet = e.getPacket();
         Player p = e.getPlayer();
         Entity entity = packet.getEntityModifier(e).read(0);
-        List<WrappedWatchableObject> modifier = packet.getWatchableCollectionModifier().read(0);
+        List<WrappedDataValue> modifier = packet.getDataValueCollectionModifier().read(0);
         if (!(entity instanceof LivingEntity) || e.isPlayerTemporary()) {
             return;
         }
-        for (WrappedWatchableObject obj : modifier) {
+        for (WrappedDataValue obj : modifier) {
             /*
              * 9 - health
              * https://wiki.vg/Protocol#Set_Entity_Metadata
