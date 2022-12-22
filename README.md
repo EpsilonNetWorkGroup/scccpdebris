@@ -1,8 +1,8 @@
 # scccpdebris
-The current supported version is 1.19.2  
+The current supported version is 1.19.3  
 Optional public part, The aim is to fix flawed part of the Minecraft multiplayer protocol
 # feature:
-All features were added without affecting vanilla. Requires ProtocolLib!
+All features were added without affecting vanilla. Requires **ProtocolLib**!
 - [X] Randomize entity health to prevent players from using cheats to see it.
 - [X] Hide player's detailed potion effects to avoid other cheating players from seeing
 - [X] Randomized achievement details to prevent players from using [cheat mod](https://modrinth.com/mod/advancementinfo) to view achievements.
