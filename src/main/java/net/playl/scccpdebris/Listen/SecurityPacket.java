@@ -162,6 +162,13 @@ public class SecurityPacket extends PacketAdapter implements Listener {
             return;
         }
 
+        if (e.getPlayer().getWorld().getEnvironment() == Environment.NORMAL) {
+            try {
+                e.getPlayer().setSendViewDistance(e.getPlayer().getWorld().getSendViewDistance());
+            } catch (IllegalStateException r) {
+            }
+        }
+
         if (e.getPlayer().getWorld().getEnvironment() == Environment.THE_END) {
             if (e.getPlayer().getSendViewDistance() != e.getPlayer().getWorld().getSendViewDistance()) {
                 packet.getIntegers().write(0, e.getPlayer().getWorld().getSendViewDistance());
