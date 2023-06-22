@@ -147,24 +147,30 @@ public class SecurityPacket extends PacketAdapter implements Listener {
         }
     }
 
+    private int getPlayerAdjustVD(Player p) {
+        int WorldVD = p.getWorld().getSendViewDistance();
+        int ClientVD = p.getClientViewDistance();
+        int minVD = Math.min(WorldVD, ClientVD);
+        // IDK, but fog reduces viewing distance by about 60%
+        return Math.max(2, minVD - ((int) Math.ceil((minVD * 0.6))));
+    }
+
     private void fogWhisperVD(PacketEvent e) {
         // https://wiki.vg/Protocol#Set_Render_Distance
         PacketContainer packet = e.getPacket();
-
         if (e.getPlayer().getWorld().getEnvironment() == Environment.NETHER) {
 
             try {
-                e.getPlayer().setSendViewDistance(e.getPlayer().getWorld().getSendViewDistance() - 6);
+                e.getPlayer().setSendViewDistance(getPlayerAdjustVD(e.getPlayer()));
             } catch (IllegalStateException r) {
             }
                 
             packet.getIntegers().write(0, e.getPlayer().getWorld().getSendViewDistance());
-            return;
         }
 
         if (e.getPlayer().getWorld().getEnvironment() == Environment.NORMAL) {
             try {
-                e.getPlayer().setSendViewDistance(e.getPlayer().getWorld().getSendViewDistance());
+                e.getPlayer().setSendViewDistance(-1);
             } catch (IllegalStateException r) {
             }
         }
@@ -179,13 +185,17 @@ public class SecurityPacket extends PacketAdapter implements Listener {
 
     @EventHandler
     public void fogWhisper(EnderDragonChangePhaseEvent e) {
+        if (e.getEntity().getDragonBattle() == null) {
+            return;
+        }
+
         e.getEntity().getDragonBattle().getBossBar().getPlayers().forEach(p -> {
             if (p.getSendViewDistance() != p.getWorld().getSendViewDistance()) {
                 return;
             }
 
             try {
-                p.setSendViewDistance(p.getWorld().getSendViewDistance() - 6);
+                p.setSendViewDistance(getPlayerAdjustVD(p));
             } catch (IllegalStateException r) {
             }
             Bukkit.getScheduler().runTaskTimer(plugin, (task) -> {
@@ -200,17 +210,16 @@ public class SecurityPacket extends PacketAdapter implements Listener {
                 }
                 if (w.getEnderDragonBattle().getEnderDragon() == null) {
                     try {
-                        p.setSendViewDistance(w.getSendViewDistance());
+                        p.setSendViewDistance(-1);
                     } catch (IllegalStateException r) {
                         return;
                     }
-                    p.setSendViewDistance(w.getSendViewDistance());
                     task.cancel();
                     return;
                 }
                 if (!w.getEnderDragonBattle().getBossBar().getPlayers().contains(p)) {
                     try {
-                        p.setSendViewDistance(w.getSendViewDistance());
+                        p.setSendViewDistance(-1);
                     } catch (IllegalStateException r) {
                         return;
                     }

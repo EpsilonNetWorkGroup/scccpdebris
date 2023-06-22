@@ -1,5 +1,5 @@
 # scccpdebris
-The current supported version is 1.19.4   
+The current supported version is 1.20.1   
 Optional public part, The aim is to fix flawed part of the Minecraft multiplayer protocol
 # feature:
 All features were added without affecting vanilla. Requires **ProtocolLib**!
