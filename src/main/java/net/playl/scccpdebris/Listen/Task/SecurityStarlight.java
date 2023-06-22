@@ -26,22 +26,19 @@ public class SecurityStarlight extends BukkitRunnable {
         
         PotionEffect pf = p.getPotionEffect(type);
         if (pf == null) {
-            p.setViewDistance(p.getWorld().getViewDistance());
-            p.setSimulationDistance(p.getWorld().getSimulationDistance());
+            p.setSendViewDistance(-1);
             cancel();
             return;
         }
 
         if (pf.getDuration() <= 30) {
-            p.setViewDistance(p.getWorld().getViewDistance());
-            p.setSimulationDistance(p.getWorld().getSimulationDistance());
+            p.setSendViewDistance(-1);
             cancel();
             return;
         }
 
         if (!changed) {
-            p.setViewDistance(2);
-            p.setSimulationDistance(2);
+            p.setSendViewDistance(2);
             changed = true;
         }
     }
