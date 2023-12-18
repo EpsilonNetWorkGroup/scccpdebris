@@ -4,7 +4,7 @@
 
   <groupId>net.playl.scccpdebris</groupId>
   <artifactId>scccpdebris</artifactId>
-  <version>1.3.4</version>
+  <version>1.4.4</version>
   <packaging>jar</packaging>
   <url>https://wiki.playl.net</url>
 
@@ -60,7 +60,7 @@
   <dependency>
     <groupId>io.papermc.paper</groupId>
     <artifactId>paper-api</artifactId>
-    <version>1.20.1-R0.1-SNAPSHOT</version>
+    <version>1.20.2-R0.1-SNAPSHOT</version>
     <scope>provided</scope>
   </dependency>
 </dependencies>
