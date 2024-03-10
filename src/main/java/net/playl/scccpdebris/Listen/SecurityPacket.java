@@ -158,6 +158,9 @@ public class SecurityPacket extends PacketAdapter implements Listener {
     private void fogWhisperVD(PacketEvent e) {
         // https://wiki.vg/Protocol#Set_Render_Distance
         PacketContainer packet = e.getPacket();
+        
+        Bukkit.broadcast(Component.text("playervdnow: "+e.getPlayer().getSendViewDistance()+" packetsend:"+packet.getIntegers().read(0)));
+
         if (e.getPlayer().getWorld().getEnvironment() == Environment.NETHER) {
 
             try {
