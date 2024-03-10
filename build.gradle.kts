@@ -21,7 +21,7 @@ dependencies {
 }
 
 group = "net.playl.scccpdebris"
-version = "1.5.4"
+version = "1.6.4"
 description = "scccpdebris"
 
 blossom {
