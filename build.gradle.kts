@@ -24,9 +24,16 @@ group = "net.playl.scccpdebris"
 version = "1.6.4"
 description = "scccpdebris"
 
-blossom {
-    val main = "src/main/resources/plugin.yml"
-    replaceToken("{version}", version, main)
+tasks {
+    processResources {
+        val props = mapOf(
+            "version" to version,
+        )
+        filesMatching("plugin.yml") {
+            expand(props)
+        }
+
+    }
 }
 
 java {
