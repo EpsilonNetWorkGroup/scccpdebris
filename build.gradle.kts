@@ -16,13 +16,13 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT")
+    compileOnly("dev.folia:folia-api:1.20.4-R0.1-SNAPSHOT")
     compileOnly("com.comphenix.protocol:ProtocolLib:5.1.0")
 }
 
 group = "net.playl.scccpdebris"
-version = "1.6.4"
-description = "scccpdebris"
+version = "1.7.4-folia-SNAPSHOT"
+description = "scccpdebris-folia"
 
 tasks {
     processResources {

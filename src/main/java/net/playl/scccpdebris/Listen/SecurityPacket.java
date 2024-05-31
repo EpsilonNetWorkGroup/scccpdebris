@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.attribute.Attribute;
@@ -25,13 +24,12 @@ import org.bukkit.entity.Wolf;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EnderDragonChangePhaseEvent;
+import org.bukkit.event.entity.EntityDismountEvent;
+import org.bukkit.event.entity.EntityMountEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent.Action;
 import org.bukkit.event.player.PlayerToggleSprintEvent;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffectType;
-import org.spigotmc.event.entity.EntityDismountEvent;
-import org.spigotmc.event.entity.EntityMountEvent;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.ListenerPriority;
@@ -196,11 +194,8 @@ public class SecurityPacket extends PacketAdapter implements Listener {
                 p.setSendViewDistance(getPlayerAdjustVD(p));
             } catch (IllegalStateException ignored) {
             }
-            Bukkit.getScheduler().runTaskTimer(plugin, (task) -> {
-                if (!p.isOnline()) {
-                    task.cancel();
-                    return;
-                }
+
+            e.getEntity().getScheduler().runAtFixedRate(plugin, (task) -> {
                 World w = p.getWorld();
                 if (w.getEnvironment() != Environment.THE_END) {
                     task.cancel();
@@ -221,7 +216,7 @@ public class SecurityPacket extends PacketAdapter implements Listener {
                     }
                     task.cancel();
                 }
-            }, 5L, 20L);
+            }, null, 5L, 20L);
         });
     }
 
@@ -285,6 +280,8 @@ public class SecurityPacket extends PacketAdapter implements Listener {
                 && !event.getModifiedType().equals(PotionEffectType.BLINDNESS)) {
             return;
         }
-        new SecurityStarlight((Player) event.getEntity(), event.getModifiedType()).runTaskTimer(plugin, 25L, 10L);
+        event.getEntity().getScheduler().runAtFixedRate(plugin,
+                new SecurityStarlight((Player) event.getEntity(), event.getModifiedType()),
+                null, 25L, 10L);
     }
 }
