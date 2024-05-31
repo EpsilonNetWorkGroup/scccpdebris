@@ -272,6 +272,8 @@ public class SecurityPacket extends PacketAdapter implements Listener {
     public void starlightCheck(PlayerToggleSprintEvent event) {
         if (event.getPlayer().hasPotionEffect(PotionEffectType.BLINDNESS)) {
             if (event.isSprinting()) {
+                plugin.getLogger().warning("One player was kicked off the server for sprinting while under the" +
+                        " effect of blindness, which is something that normal clients would never do.");
                 event.getPlayer().kick(Component.text("impossible move (Starlight)", NamedTextColor.RED));
             }
         }
