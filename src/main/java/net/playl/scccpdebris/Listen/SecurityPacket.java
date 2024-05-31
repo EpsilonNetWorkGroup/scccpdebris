@@ -56,7 +56,7 @@ public class SecurityPacket extends PacketAdapter implements Listener {
     PacketType.Play.Server.ENTITY_EFFECT, PacketType.Play.Server.VIEW_DISTANCE, PacketType.Play.Server.ADVANCEMENTS);
 
     public SecurityPacket(Main plugin) {
-        super((Plugin) plugin, ListenerPriority.NORMAL, LISTENING_PACKETS);
+        super(plugin, ListenerPriority.NORMAL, LISTENING_PACKETS);
         this.plugin = plugin;
     }
 
@@ -136,9 +136,7 @@ public class SecurityPacket extends PacketAdapter implements Listener {
                 Iterator<String> vIter = shufflekey.iterator();
 
                 Map<String, CriterionProgress> shuffledAdvProgress = new HashMap<>();
-                v.progress.values().forEach(Crprogress -> {
-                    shuffledAdvProgress.put(vIter.next(), Crprogress);
-                });
+                v.progress.values().forEach(Crprogress -> shuffledAdvProgress.put(vIter.next(), Crprogress));
 
                 v.progress = shuffledAdvProgress;
                 map.put(k, v);
@@ -163,7 +161,7 @@ public class SecurityPacket extends PacketAdapter implements Listener {
 
             try {
                 e.getPlayer().setSendViewDistance(getPlayerAdjustVD(e.getPlayer()));
-            } catch (IllegalStateException r) {
+            } catch (IllegalStateException ignored) {
             }
                 
             packet.getIntegers().write(0, e.getPlayer().getWorld().getSendViewDistance());
@@ -172,14 +170,13 @@ public class SecurityPacket extends PacketAdapter implements Listener {
         if (e.getPlayer().getWorld().getEnvironment() == Environment.NORMAL) {
             try {
                 e.getPlayer().setSendViewDistance(-1);
-            } catch (IllegalStateException r) {
+            } catch (IllegalStateException ignored) {
             }
         }
 
         if (e.getPlayer().getWorld().getEnvironment() == Environment.THE_END) {
             if (packet.getIntegers().read(0) != e.getPlayer().getWorld().getSendViewDistance()) {
                 packet.getIntegers().write(0, e.getPlayer().getWorld().getSendViewDistance());
-                return;
             }
         }
     }
@@ -197,7 +194,7 @@ public class SecurityPacket extends PacketAdapter implements Listener {
 
             try {
                 p.setSendViewDistance(getPlayerAdjustVD(p));
-            } catch (IllegalStateException r) {
+            } catch (IllegalStateException ignored) {
             }
             Bukkit.getScheduler().runTaskTimer(plugin, (task) -> {
                 if (!p.isOnline()) {
@@ -216,16 +213,13 @@ public class SecurityPacket extends PacketAdapter implements Listener {
                         return;
                     }
                     task.cancel();
-                    return;
-                }
-                if (!w.getEnderDragonBattle().getBossBar().getPlayers().contains(p)) {
+                } else if (!w.getEnderDragonBattle().getBossBar().getPlayers().contains(p)) {
                     try {
                         p.setSendViewDistance(-1);
                     } catch (IllegalStateException r) {
                         return;
                     }
                     task.cancel();
-                    return;
                 }
             }, 5L, 20L);
         });
@@ -257,13 +251,13 @@ public class SecurityPacket extends PacketAdapter implements Listener {
     }
 
     private void updateMount(Entity entity, Entity mount) {
-        if (!(entity instanceof Player) || !(mount instanceof LivingEntity)) {
+        if (!(entity instanceof Player) || !(mount instanceof LivingEntity ent)) {
             return;
         }
 
-        LivingEntity ent = (LivingEntity) mount;
         double health = ent.getHealth();
 
+        // Force the server to resend health packet
         ent.setHealth(1);
         ent.setHealth(health);
     }
