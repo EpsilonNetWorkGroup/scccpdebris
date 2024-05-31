@@ -177,7 +177,7 @@ public class SecurityPacket extends PacketAdapter implements Listener {
         }
 
         if (e.getPlayer().getWorld().getEnvironment() == Environment.THE_END) {
-            if (e.getPlayer().getSendViewDistance() != e.getPlayer().getWorld().getSendViewDistance()) {
+            if (packet.getIntegers().read(0) != e.getPlayer().getWorld().getSendViewDistance()) {
                 packet.getIntegers().write(0, e.getPlayer().getWorld().getSendViewDistance());
                 return;
             }
@@ -209,7 +209,7 @@ public class SecurityPacket extends PacketAdapter implements Listener {
                     task.cancel();
                     return;
                 }
-                if (w.getEnderDragonBattle().getEnderDragon() == null) {
+                if (w.getEnderDragonBattle() == null || w.getEnderDragonBattle().getEnderDragon() == null) {
                     try {
                         p.setSendViewDistance(-1);
                     } catch (IllegalStateException r) {
