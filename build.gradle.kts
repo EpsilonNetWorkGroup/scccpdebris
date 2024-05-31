@@ -21,7 +21,7 @@ dependencies {
 }
 
 group = "net.playl.scccpdebris"
-version = "1.6.4"
+version = "1.7.4"
 description = "scccpdebris"
 
 tasks {
