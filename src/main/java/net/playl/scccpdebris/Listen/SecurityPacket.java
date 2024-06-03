@@ -1,7 +1,6 @@
 package net.playl.scccpdebris.Listen;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -10,6 +9,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import com.github.retrooper.packetevents.event.PacketListenerAbstract;
+import com.github.retrooper.packetevents.event.PacketListenerPriority;
+import com.github.retrooper.packetevents.event.PacketSendEvent;
+import com.github.retrooper.packetevents.netty.NettyManager;
+import com.github.retrooper.packetevents.netty.buffer.ByteBufHelper;
+import com.github.retrooper.packetevents.protocol.packettype.PacketType;
+import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
+import com.github.retrooper.packetevents.protocol.potion.PotionTypes;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityEffect;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityMetadata;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerUpdateViewDistance;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
@@ -25,84 +35,79 @@ import org.bukkit.entity.Wolf;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EnderDragonChangePhaseEvent;
+import org.bukkit.event.entity.EntityDismountEvent;
+import org.bukkit.event.entity.EntityMountEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent.Action;
 import org.bukkit.event.player.PlayerToggleSprintEvent;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffectType;
-import org.spigotmc.event.entity.EntityDismountEvent;
-import org.spigotmc.event.entity.EntityMountEvent;
-
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.events.ListenerPriority;
-import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.reflect.StructureModifier;
-import com.comphenix.protocol.wrappers.AutoWrapper;
-import com.comphenix.protocol.wrappers.BukkitConverters;
-import com.comphenix.protocol.wrappers.Converters;
-import com.comphenix.protocol.wrappers.MinecraftKey;
-import com.comphenix.protocol.wrappers.WrappedDataValue;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.playl.scccpdebris.Main;
 import net.playl.scccpdebris.Listen.Task.SecurityStarlight;
 
-public class SecurityPacket extends PacketAdapter implements Listener {
-    
-    private static final List<PacketType> LISTENING_PACKETS = Arrays.asList(PacketType.Play.Server.ENTITY_METADATA,
-    PacketType.Play.Server.ENTITY_EFFECT, PacketType.Play.Server.VIEW_DISTANCE, PacketType.Play.Server.ADVANCEMENTS);
+public class SecurityPacket extends PacketListenerAbstract implements Listener {
+
+    private final Main plugin;
 
     public SecurityPacket(Main plugin) {
-        super(plugin, ListenerPriority.NORMAL, LISTENING_PACKETS);
+        super(PacketListenerPriority.LOW);
         this.plugin = plugin;
     }
 
-    public void onPacketSending(PacketEvent event) {
-        PacketType type = event.getPacketType();
+    @Override
+    public void onPacketSend(PacketSendEvent event) {
+        PacketTypeCommon type = event.getPacketType();
         if (type == PacketType.Play.Server.ENTITY_METADATA) {
             entityMetaData(event);
         } else if (type == PacketType.Play.Server.ENTITY_EFFECT) {
             entityMetaEffect(event);
-        } else if (type == PacketType.Play.Server.VIEW_DISTANCE) {
+        } else if (type == PacketType.Play.Server.UPDATE_VIEW_DISTANCE) {
             fogWhisperVD(event);
-        } else if (type == PacketType.Play.Server.ADVANCEMENTS) {
+        } else if (type == PacketType.Play.Server.UPDATE_ADVANCEMENTS) {
             advGuard(event);
         }
     }
 
-    private void entityMetaData(PacketEvent e) {
-        PacketContainer packet = e.getPacket();
-        Player p = e.getPlayer();
-        Entity entity = packet.getEntityModifier(e).read(0);
-        List<WrappedDataValue> modifier = packet.getDataValueCollectionModifier().read(0);
-        if (!(entity instanceof LivingEntity) || e.isPlayerTemporary()) {
+    private void entityMetaData(PacketSendEvent e) {
+        WrapperPlayServerEntityMetadata packet = new WrapperPlayServerEntityMetadata(e);
+        Player p = (Player) e.getPlayer();
+        // check entity id , Data packets should only send information about entities around the player
+        // Searched possible twice the range
+        Entity entity = p.getNearbyEntities(p.getSendViewDistance()*16, 389, p.getSendViewDistance()*16)
+                .stream().filter(ent -> ent.getEntityId() == packet.getEntityId()).findFirst().orElse(null);
+        if (entity == null) {
+            plugin.getLogger().severe("#entityMetaData The corresponding entity was not found");
             return;
         }
-        for (WrappedDataValue obj : modifier) {
-            /*
-             * 9 - health
-             * https://wiki.vg/Protocol#Set_Entity_Metadata
-             * https://wiki.vg/Entity_metadata#Living
-             */
-            if (obj.getIndex() == 9) {
+
+        if (!(entity instanceof LivingEntity)) {
+            return;
+        }
+
+        /*
+         * 9 - health
+         * https://wiki.vg/Protocol#Set_Entity_Metadata
+         * https://wiki.vg/Entity_metadata#Living
+         */
+        packet.getEntityMetadata().forEach(entityData -> {
+            if (entityData.getIndex() == 9) {
                 if (entity.getEntityId() == p.getEntityId() || entity.getPassengers().contains(p)
                         || (entity instanceof Wolf)
                         || (entity instanceof EnderDragon) || (entity instanceof Wither)
                         || (entity instanceof IronGolem)) {
-                    obj.setValue((float) ((LivingEntity) entity).getHealth());
+                    entityData.setValue((float) ((LivingEntity) entity).getHealth());
                 } else {
-                    Float value = (Float) obj.getValue();
+                    Float value = (Float) entityData.getValue();
                     if (value > 0) {
                         double health = ((new Random()).nextFloat() * 1.5F)
                                 * ((LivingEntity) entity).getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
-                        obj.setValue((float) health);
+                        entityData.setValue((float) health);
                     }
                 }
             }
-        }
+        });
     }
 
     public static class CriterionProgress {
@@ -120,9 +125,9 @@ public class SecurityPacket extends PacketAdapter implements Listener {
     .wrap(AdvancementProgress.class, "advancements.AdvancementProgress")
     .field(0, BukkitConverters.getMapConverter(Converters.passthrough(String.class), CRITERION));
 
-    private void advGuard(PacketEvent e) {
+    private void advGuard(PacketSendEvent e) {
         // https://wiki.vg/Protocol#Update_Advancements
-        PacketContainer packet = e.getPacket();
+        WrapperPlayServer packet = e.getPacket();
         StructureModifier<Map<MinecraftKey, AdvancementProgress>> modifier = packet.getMaps(MinecraftKey.getConverter(), PROGRESS);
         Map<MinecraftKey, AdvancementProgress> map = modifier.optionRead(1).orElse(null);
 
@@ -153,30 +158,31 @@ public class SecurityPacket extends PacketAdapter implements Listener {
         return Math.max(2, minVD - ((int) Math.ceil((minVD * 0.6))));
     }
 
-    private void fogWhisperVD(PacketEvent e) {
+    private void fogWhisperVD(PacketSendEvent e) {
         // https://wiki.vg/Protocol#Set_Render_Distance
-        PacketContainer packet = e.getPacket();
+        WrapperPlayServerUpdateViewDistance packet = new WrapperPlayServerUpdateViewDistance(e);
+        Player p = (Player) e.getPlayer();
 
-        if (e.getPlayer().getWorld().getEnvironment() == Environment.NETHER) {
+        if (p.getWorld().getEnvironment() == Environment.NETHER) {
 
             try {
-                e.getPlayer().setSendViewDistance(getPlayerAdjustVD(e.getPlayer()));
+                p.setSendViewDistance(getPlayerAdjustVD(p));
             } catch (IllegalStateException ignored) {
             }
-                
-            packet.getIntegers().write(0, e.getPlayer().getWorld().getSendViewDistance());
+
+            packet.setViewDistance(p.getWorld().getSendViewDistance());
         }
 
-        if (e.getPlayer().getWorld().getEnvironment() == Environment.NORMAL) {
+        if (p.getWorld().getEnvironment() == Environment.NORMAL) {
             try {
-                e.getPlayer().setSendViewDistance(-1);
+                p.setSendViewDistance(-1);
             } catch (IllegalStateException ignored) {
             }
         }
 
-        if (e.getPlayer().getWorld().getEnvironment() == Environment.THE_END) {
-            if (packet.getIntegers().read(0) != e.getPlayer().getWorld().getSendViewDistance()) {
-                packet.getIntegers().write(0, e.getPlayer().getWorld().getSendViewDistance());
+        if (p.getWorld().getEnvironment() == Environment.THE_END) {
+            if (packet.getViewDistance() != p.getWorld().getSendViewDistance()) {
+                packet.setViewDistance(p.getWorld().getSendViewDistance());
             }
         }
     }
@@ -225,19 +231,19 @@ public class SecurityPacket extends PacketAdapter implements Listener {
         });
     }
 
-    private void entityMetaEffect(PacketEvent e) {
+    private void entityMetaEffect(PacketSendEvent e) {
         // https://wiki.vg/Protocol#Entity_Effect
-        PacketContainer packet = e.getPacket();
-        int entityID = packet.getIntegers().read(0);
+        WrapperPlayServerEntityEffect packet = new WrapperPlayServerEntityEffect(e);
+        Player p = (Player) e.getPlayer();
+        int entityID = packet.getEntityId();
 
-        if (e.getPlayer().getEntityId() == entityID) {
+        if (p.getEntityId() == entityID) {
             return;
         }
 
-        packet.getEffectTypes().write(0, PotionEffectType.UNLUCK);
-        packet.getBytes().write(0, (byte) 0);
-        packet.getIntegers().write(1, 0);
-
+        packet.setPotionType(PotionTypes.UNLUCK);
+        packet.setEffectAmplifier(0);
+        packet.setEffectDurationTicks(0);
     }
 
     @EventHandler
