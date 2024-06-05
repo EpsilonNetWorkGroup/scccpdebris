@@ -9,7 +9,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.attribute.Attribute;
@@ -74,7 +76,12 @@ public class SecurityPacket extends PacketAdapter implements Listener {
     private void entityMetaData(PacketEvent e) {
         PacketContainer packet = e.getPacket();
         Player p = e.getPlayer();
-        Entity entity = packet.getEntityModifier(e).read(0);
+        CompletableFuture<Entity> completableFuture = new CompletableFuture<>();
+        Bukkit.getGlobalRegionScheduler().execute(plugin, () -> {
+            completableFuture.complete(packet.getEntityModifier(p.getWorld()).read(0));
+        });
+
+        Entity entity = completableFuture.join();
         List<WrappedDataValue> modifier = packet.getDataValueCollectionModifier().read(0);
         if (!(entity instanceof LivingEntity) || e.isPlayerTemporary()) {
             return;

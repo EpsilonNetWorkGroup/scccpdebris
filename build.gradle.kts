@@ -21,7 +21,7 @@ dependencies {
 }
 
 group = "net.playl.scccpdebris"
-version = "1.7.4-folia-SNAPSHOT"
+version = "1.7.5-folia-SNAPSHOT"
 description = "scccpdebris-folia"
 
 tasks {
