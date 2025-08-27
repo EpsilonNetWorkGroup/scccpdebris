@@ -21,6 +21,7 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEn
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityMetadata;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerUpdateAdvancements;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerUpdateViewDistance;
+import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
@@ -74,10 +75,9 @@ public class SecurityPacket extends PacketListenerAbstract implements Listener {
     private void entityMetaData(PacketSendEvent e) {
         WrapperPlayServerEntityMetadata packet = new WrapperPlayServerEntityMetadata(e);
         Player p = e.getPlayer();
-        // check entity id , Data packets should only send information about entities around the player
-        // Searched possible twice the range
-        Entity entity = p.getNearbyEntities(p.getSendViewDistance()*16, 389, p.getSendViewDistance()*16)
-                .stream().filter(ent -> ent.getEntityId() == packet.getEntityId()).findFirst().orElse(null);
+
+        // safe or not, idk
+        var entity = SpigotConversionUtil.getEntityById(p.getWorld(), packet.getEntityId());
         if (entity == null) {
             plugin.getLogger().severe("#entityMetaData The corresponding entity was not found");
             return;
