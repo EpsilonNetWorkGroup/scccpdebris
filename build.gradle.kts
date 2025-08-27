@@ -12,16 +12,16 @@ repositories {
     gradlePluginPortal()
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
-    maven("https://repo.dmulloy2.net/repository/public/")
+    maven("https://repo.codemc.io/repository/maven-releases/")
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT")
-    compileOnly("com.comphenix.protocol:ProtocolLib:5.1.0")
+    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
+    compileOnly("com.github.retrooper:packetevents-spigot:2.9.5")
 }
 
 group = "net.playl.scccpdebris"
-version = "1.7.4"
+version = "1.8.0"
 description = "scccpdebris"
 
 tasks {
@@ -38,7 +38,7 @@ tasks {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 

@@ -1,19 +1,25 @@
 package net.playl.scccpdebris;
 
-import org.bukkit.Bukkit;
+import com.github.retrooper.packetevents.PacketEvents;
+import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
+import net.playl.scccpdebris.Listen.SecurityPacket;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.events.PacketListener;
-
-import net.playl.scccpdebris.Listen.SecurityPacket;
 
 public class Main extends JavaPlugin {
+
+    public void onLoad() {
+        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
+        PacketEvents.getAPI().load();
+    }
+
     public void onEnable() {
-        ProtocolLibrary.getProtocolManager().addPacketListener((PacketListener)new SecurityPacket(this));
-        Bukkit.getServer().getPluginManager().registerEvents(new SecurityPacket(this), this);
+        //We register before calling PacketEvents#init, because that method might already call some events.
+        PacketEvents.getAPI().getEventManager().registerListener(new SecurityPacket(this));
+        PacketEvents.getAPI().init();
     }
     
     public void onDisable() {
+        PacketEvents.getAPI().terminate();
     }
 }
