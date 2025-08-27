@@ -12,13 +12,15 @@ import java.util.Random;
 import com.github.retrooper.packetevents.event.PacketListenerAbstract;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
-import com.github.retrooper.packetevents.netty.NettyManager;
-import com.github.retrooper.packetevents.netty.buffer.ByteBufHelper;
+import com.github.retrooper.packetevents.protocol.advancements.AdvancementProgress;
+import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
 import com.github.retrooper.packetevents.protocol.potion.PotionTypes;
+import com.github.retrooper.packetevents.resources.ResourceLocation;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityEffect;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityMetadata;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerUpdateAdvancements;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerUpdateViewDistance;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -72,7 +74,7 @@ public class SecurityPacket extends PacketListenerAbstract implements Listener {
 
     private void entityMetaData(PacketSendEvent e) {
         WrapperPlayServerEntityMetadata packet = new WrapperPlayServerEntityMetadata(e);
-        Player p = (Player) e.getPlayer();
+        Player p = e.getPlayer();
         // check entity id , Data packets should only send information about entities around the player
         // Searched possible twice the range
         Entity entity = p.getNearbyEntities(p.getSendViewDistance()*16, 389, p.getSendViewDistance()*16)
@@ -91,62 +93,49 @@ public class SecurityPacket extends PacketListenerAbstract implements Listener {
          * https://wiki.vg/Protocol#Set_Entity_Metadata
          * https://wiki.vg/Entity_metadata#Living
          */
-        packet.getEntityMetadata().forEach(entityData -> {
+        var entityMetadata = packet.getEntityMetadata();
+        entityMetadata.forEach(entityData -> {
+
+
             if (entityData.getIndex() == 9) {
-                if (entity.getEntityId() == p.getEntityId() || entity.getPassengers().contains(p)
-                        || (entity instanceof Wolf)
-                        || (entity instanceof EnderDragon) || (entity instanceof Wither)
-                        || (entity instanceof IronGolem)) {
-                    entityData.setValue((float) ((LivingEntity) entity).getHealth());
-                } else {
+                if (entity.getEntityId() != p.getEntityId() && !entity.getPassengers().contains(p)
+                        && !(entity instanceof Wolf)
+                        && !(entity instanceof EnderDragon) && (entity instanceof Wither)
+                        && !(entity instanceof IronGolem)) {
                     Float value = (Float) entityData.getValue();
                     if (value > 0) {
+                        e.markForReEncode(true);
                         double health = ((new Random()).nextFloat() * 1.5F)
-                                * ((LivingEntity) entity).getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
-                        entityData.setValue((float) health);
+                                * ((LivingEntity) entity).getAttribute(Attribute.MAX_HEALTH).getValue();
+                        ((EntityData<Float>) entityData).setValue((float) health);
                     }
                 }
             }
         });
+        e.markForReEncode(true);
     }
-
-    public static class CriterionProgress {
-        public Date date;
-    }
-
-    public static class AdvancementProgress {
-        public Map<String, CriterionProgress> progress;
-    }
-
-    private static final AutoWrapper<CriterionProgress> CRITERION = AutoWrapper
-    .wrap(CriterionProgress.class, "advancements.CriterionProgress");
-
-    private static final AutoWrapper<AdvancementProgress> PROGRESS = AutoWrapper
-    .wrap(AdvancementProgress.class, "advancements.AdvancementProgress")
-    .field(0, BukkitConverters.getMapConverter(Converters.passthrough(String.class), CRITERION));
 
     private void advGuard(PacketSendEvent e) {
         // https://wiki.vg/Protocol#Update_Advancements
-        WrapperPlayServer packet = e.getPacket();
-        StructureModifier<Map<MinecraftKey, AdvancementProgress>> modifier = packet.getMaps(MinecraftKey.getConverter(), PROGRESS);
-        Map<MinecraftKey, AdvancementProgress> map = modifier.optionRead(1).orElse(null);
+        WrapperPlayServerUpdateAdvancements packet = new WrapperPlayServerUpdateAdvancements(e);
+        Map<ResourceLocation, AdvancementProgress> map = packet.getProgress();
 
         if (map != null) {
+            e.markForReEncode(true);
             map.forEach((k, v) -> {
                 if (k.getKey().contains("recipes")) {
                     return;
                 }
-                List<String> shufflekey = new ArrayList<>(v.progress.keySet());
+                List<String> shufflekey = new ArrayList<>(v.getCriteria().keySet());
                 Collections.shuffle(shufflekey);
                 Iterator<String> vIter = shufflekey.iterator();
 
-                Map<String, CriterionProgress> shuffledAdvProgress = new HashMap<>();
-                v.progress.values().forEach(Crprogress -> shuffledAdvProgress.put(vIter.next(), Crprogress));
+                Map<String, AdvancementProgress. CriterionProgress> shuffledAdvProgress = new HashMap<>();
+                v.getCriteria().values().forEach(Crprogress -> shuffledAdvProgress.put(vIter.next(), Crprogress));
 
-                v.progress = shuffledAdvProgress;
+                v.setCriteria(shuffledAdvProgress);
                 map.put(k, v);
             });
-            modifier.write(1, map);
         }
     }
 
@@ -185,6 +174,7 @@ public class SecurityPacket extends PacketListenerAbstract implements Listener {
                 packet.setViewDistance(p.getWorld().getSendViewDistance());
             }
         }
+        e.markForReEncode(true);
     }
 
     @EventHandler
@@ -244,6 +234,7 @@ public class SecurityPacket extends PacketListenerAbstract implements Listener {
         packet.setPotionType(PotionTypes.UNLUCK);
         packet.setEffectAmplifier(0);
         packet.setEffectDurationTicks(0);
+        e.markForReEncode(true);
     }
 
     @EventHandler
