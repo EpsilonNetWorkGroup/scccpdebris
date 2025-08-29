@@ -79,7 +79,6 @@ public class SecurityPacket extends PacketListenerAbstract implements Listener {
         // safe or not, idk
         var entity = SpigotConversionUtil.getEntityById(p.getWorld(), packet.getEntityId());
         if (entity == null) {
-            plugin.getLogger().severe("#entityMetaData The corresponding entity was not found");
             return;
         }
 
