@@ -1,12 +1,6 @@
 package net.playl.scccpdebris.Listen;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 import com.github.retrooper.packetevents.event.PacketListenerAbstract;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
@@ -26,6 +20,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -61,14 +56,12 @@ public class SecurityPacket extends PacketListenerAbstract implements Listener {
     @Override
     public void onPacketSend(PacketSendEvent event) {
         PacketTypeCommon type = event.getPacketType();
-        if (type == PacketType.Play.Server.ENTITY_METADATA) {
-            entityMetaData(event);
-        } else if (type == PacketType.Play.Server.ENTITY_EFFECT) {
-            entityMetaEffect(event);
-        } else if (type == PacketType.Play.Server.UPDATE_VIEW_DISTANCE) {
-            fogWhisperVD(event);
-        } else if (type == PacketType.Play.Server.UPDATE_ADVANCEMENTS) {
-            advGuard(event);
+        switch (type) {
+            case PacketType.Play.Server.ENTITY_METADATA -> entityMetaData(event);
+            case PacketType.Play.Server.ENTITY_EFFECT -> entityMetaEffect(event);
+            case PacketType.Play.Server.UPDATE_VIEW_DISTANCE -> fogWhisperVD(event);
+            case PacketType.Play.Server.UPDATE_ADVANCEMENTS -> advGuard(event);
+            default -> {}
         }
     }
 
@@ -103,8 +96,10 @@ public class SecurityPacket extends PacketListenerAbstract implements Listener {
                     Float value = (Float) entityData.getValue();
                     if (value > 0) {
                         e.markForReEncode(true);
-                        double health = ((new Random()).nextFloat() * 1.5F)
-                                * ((LivingEntity) entity).getAttribute(Attribute.MAX_HEALTH).getValue();
+                        double health = ((new Random()).nextFloat() * 1.5F) *
+                                Optional.ofNullable(((LivingEntity) entity).getAttribute(Attribute.MAX_HEALTH))
+                                        .map(AttributeInstance::getValue)
+                                        .orElse(20.0);
                         ((EntityData<Float>) entityData).setValue((float) health);
                     }
                 }

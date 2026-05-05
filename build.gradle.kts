@@ -4,8 +4,7 @@
 
 plugins {
     id("java-library")
-    id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("net.kyori.blossom") version "1.3.1"
+    id("com.gradleup.shadow") version "9.4.1"
 }
 
 repositories {
@@ -16,12 +15,12 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
-    compileOnly("com.github.retrooper:packetevents-spigot:2.9.5")
+    compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
+    compileOnly("com.github.retrooper:packetevents-spigot:2.12.1")
 }
 
 group = "net.playl.scccpdebris"
-version = "1.8.1"
+version = "1.9.0"
 description = "scccpdebris"
 
 tasks {
@@ -38,12 +37,8 @@ tasks {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
-}
-
-tasks.named("build") {
-    finalizedBy("shadowJar")
 }
 
 tasks.withType<JavaCompile> {
